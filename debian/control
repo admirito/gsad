@@ -1,0 +1,39 @@
+Source: gsad
+Section: admin
+Priority: optional
+Maintainer: Mohammad Razavi <mrazavi64@gmail.com>
+Build-Depends: debhelper-compat (= 12), cppcheck, doxygen, xmltoman, gettext, libgvm-dev (>= 21.4.1), libgnutls28-dev, libgcrypt20-dev, cmake, libglib2.0-dev, libxml2-dev, libxslt1-dev, pkg-config, libmicrohttpd-dev (>= 0.9.0)
+Standards-Version: 4.4.1
+Homepage: https://community.greenbone.net/
+Vcs-Browser: https://github.com/greenbone/gsad
+Vcs-git: https://github.com/greenbone/gsad.git
+
+Package: gsad
+Architecture: any
+Depends: lsb-base, ${shlibs:Depends}, ${misc:Depends}, adduser
+Recommends: xsltproc, gsa
+Description: remote network security auditor - web ui daemon
+ The Greenbone Vulnerability Management Solution (previously known as
+ Open Vulnerability Assessment System) is a modular security auditing tool,
+ used for testing remote systems for vulnerabilities that should be fixed.
+ .
+ It is made up of several parts: a manager i.e. the main server gvmd.
+ A scanner openvas-scanner that execute vulnerability checking scripts.
+ A  web interface called Greenbone Security Assistant gsad.
+ .
+ This package contains the web interface daemon (gsad) part.
+
+Package: greenbone-security-assistant
+Architecture: any
+Section: metapackages
+Depends: ${misc:Depends}, gsad (>= 21.4.4), gsa (>= 21.4.4)
+Description: remote network security auditor - web ui metapackage
+ The Greenbone Vulnerability Management Solution (previously known as
+ Open Vulnerability Assessment System) is a modular security auditing tool,
+ used for testing remote systems for vulnerabilities that should be fixed.
+ .
+ It is made up of several parts: a manager i.e. the main server gvmd.
+ A scanner openvas-scanner that execute vulnerability checking scripts.
+ A  web interface called Greenbone Security Assistant gsad.
+ .
+ This package is a metapackage that depends on the web interface parts.
