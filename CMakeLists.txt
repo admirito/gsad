@@ -20,23 +20,13 @@ cmake_minimum_required (VERSION 3.0)
 
 message ("-- Configuring gsad")
 
-project (gsad VERSION 21.4.4 LANGUAGES C)
+project (gsad VERSION 22.4.1 LANGUAGES C)
 
+if (NOT DEFINED PROJECT_VERSION_STRING)
+   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+   include (ProjectVersion)
+endif()
 
-# Set dev version if this is a development version and not a full release,
-# unset (put value 0 or delete line) before a full release and reset after.
-set (PROJECT_DEV_VERSION 0)
-
-# If PROJECT_DEV_VERSION is set, the version string will be set to:
-#   "major.minor.patch~dev${PROJECT_DEV_VERSION}${GIT_REVISION}"
-# If PROJECT_DEV_VERSION is NOT set, the version string will be set to:
-#   "major.minor.patch${GIT_REVISION}"
-# For CMAKE_BUILD_TYPE "Release" the git revision will be empty.
-if (PROJECT_DEV_VERSION)
-  set (PROJECT_VERSION_SUFFIX "~dev${PROJECT_DEV_VERSION}")
-endif (PROJECT_DEV_VERSION)
-
-set (PROJECT_VERSION_STRING "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}${PROJECT_VERSION_SUFFIX}${GIT_REVISION}")
 set (GSAD_VERSION "${PROJECT_VERSION_STRING}")
 
 message (STATUS "Building gsad version ${GSAD_VERSION}")
@@ -46,6 +36,8 @@ message (STATUS "Building gsad version ${GSAD_VERSION}")
 # generate compile_commands.json file
 # see https://clang.llvm.org/docs/JSONCompilationDatabase.html
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
+
+enable_testing()
 
 ## make format
 message (STATUS "Looking for clang-format...")
@@ -107,9 +99,6 @@ if (NOT GVMD_RUN_DIR)
   set (GVMD_RUN_DIR  "/run/gvmd")
 endif (NOT GVMD_RUN_DIR)
 
-if (NOT GSAD_PID_DIR)
-  set (GSAD_PID_DIR "${GVM_RUN_DIR}")
-endif (NOT GSAD_PID_DIR)
 
 
 if (NOT GVM_STATE_DIR)
@@ -146,8 +135,6 @@ endif (NOT GVM_CA_CERTIFICATE)
 configure_file (src/gsad_log_conf.cmake_in src/gsad_log.conf)
 
 ## Install
-
-install (DIRECTORY DESTINATION ${GSAD_RUN_DIR})
 
 install (FILES ${CMAKE_CURRENT_BINARY_DIR}/src/gsad_log.conf
          DESTINATION ${GSAD_CONFIG_DIR})

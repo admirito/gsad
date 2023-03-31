@@ -536,6 +536,9 @@ set_http_status_from_entity (entity_t entity,
     cmd_response_data_set_status_code (response_data, MHD_HTTP_FORBIDDEN);
   else if (str_equal (entity_attribute (entity, "status"), "404"))
     cmd_response_data_set_status_code (response_data, MHD_HTTP_NOT_FOUND);
+  else if (str_equal (entity_attribute (entity, "status"), "503"))
+    cmd_response_data_set_status_code (response_data,
+                                       MHD_HTTP_SERVICE_UNAVAILABLE);
   else
     cmd_response_data_set_status_code (response_data, MHD_HTTP_BAD_REQUEST);
 }
@@ -808,7 +811,7 @@ get_entity (gvm_connection_t *connection, const char *type,
 
   xml = g_string_new ("");
 
-  if (str_equal (type, "info"))
+  if (str_equal (type, "info") || str_equal (type, "license"))
     {
       cmd = g_strdup_printf ("get_%s", type);
     }
@@ -2092,7 +2095,7 @@ create_task_gmp (gvm_connection_t *connection, credentials_t *credentials,
   const char *name, *comment, *config_id, *target_id, *scanner_type;
   const char *scanner_id, *schedule_id, *schedule_periods;
   const char *max_checks, *max_hosts;
-  const char *in_assets, *hosts_ordering, *alterable, *source_iface;
+  const char *in_assets, *hosts_ordering, *alterable;
   const char *add_tag, *tag_id, *auto_delete, *auto_delete_data;
   const char *apply_overrides, *min_qod, *usage_type;
   gchar *name_escaped, *comment_escaped;
@@ -2116,7 +2119,6 @@ create_task_gmp (gvm_connection_t *connection, credentials_t *credentials,
   scanner_type = params_value (params, "scanner_type");
   schedule_id = params_value (params, "schedule_id");
   schedule_periods = params_value (params, "schedule_periods");
-  source_iface = params_value (params, "source_iface");
   tag_id = params_value (params, "tag_id");
   target_id = params_value (params, "target_id");
   usage_type = params_value (params, "usage_type");
@@ -2126,7 +2128,6 @@ create_task_gmp (gvm_connection_t *connection, credentials_t *credentials,
     {
       hosts_ordering = "";
       max_checks = "";
-      source_iface = "";
       max_hosts = "";
     }
   else if (!strcmp (scanner_type, "3"))
@@ -2134,7 +2135,6 @@ create_task_gmp (gvm_connection_t *connection, credentials_t *credentials,
       config_id = "";
       hosts_ordering = "";
       max_checks = "";
-      source_iface = "";
       max_hosts = "";
     }
 
@@ -2180,7 +2180,6 @@ create_task_gmp (gvm_connection_t *connection, credentials_t *credentials,
     }
 
   CHECK_VARIABLE_INVALID (max_checks, "Create Task");
-  CHECK_VARIABLE_INVALID (source_iface, "Create Task");
   CHECK_VARIABLE_INVALID (auto_delete, "Create Task");
   CHECK_VARIABLE_INVALID (auto_delete_data, "Create Task");
   CHECK_VARIABLE_INVALID (max_hosts, "Create Task");
@@ -2252,10 +2251,6 @@ create_task_gmp (gvm_connection_t *connection, credentials_t *credentials,
     "<value>%s</value>"
     "</preference>"
     "<preference>"
-    "<scanner_name>source_iface</scanner_name>"
-    "<value>%s</value>"
-    "</preference>"
-    "<preference>"
     "<scanner_name>auto_delete</scanner_name>"
     "<value>%s</value>"
     "</preference>"
@@ -2270,9 +2265,8 @@ create_task_gmp (gvm_connection_t *connection, credentials_t *credentials,
     config_id, schedule_periods, schedule_element, alert_element->str,
     target_id, scanner_id, hosts_ordering, name_escaped, comment_escaped,
     max_checks, max_hosts, strcmp (in_assets, "0") ? "yes" : "no",
-    strcmp (apply_overrides, "0") ? "yes" : "no", min_qod, source_iface,
-    auto_delete, auto_delete_data, alterable ? strcmp (alterable, "0") : 0,
-    usage_type);
+    strcmp (apply_overrides, "0") ? "yes" : "no", min_qod, auto_delete,
+    auto_delete_data, alterable ? strcmp (alterable, "0") : 0, usage_type);
 
   g_free (name_escaped);
   g_free (comment_escaped);
@@ -2439,7 +2433,7 @@ save_task_gmp (gvm_connection_t *connection, credentials_t *credentials,
   gchar *html, *response, *format;
   const char *comment, *name, *schedule_id, *in_assets;
   const char *scanner_id, *task_id, *max_checks, *max_hosts;
-  const char *config_id, *target_id, *hosts_ordering, *alterable, *source_iface;
+  const char *config_id, *target_id, *hosts_ordering, *alterable;
   const char *scanner_type, *schedule_periods, *auto_delete, *auto_delete_data;
   const char *apply_overrides, *min_qod;
   int ret;
@@ -2463,7 +2457,6 @@ save_task_gmp (gvm_connection_t *connection, credentials_t *credentials,
   scanner_type = params_value (params, "scanner_type");
   schedule_id = params_value (params, "schedule_id");
   schedule_periods = params_value (params, "schedule_periods");
-  source_iface = params_value (params, "source_iface");
   target_id = params_value (params, "target_id");
   task_id = params_value (params, "task_id");
 
@@ -2474,7 +2467,6 @@ save_task_gmp (gvm_connection_t *connection, credentials_t *credentials,
         {
           hosts_ordering = "";
           max_checks = "";
-          source_iface = "";
           max_hosts = "";
         }
       else if (!strcmp (scanner_type, "3"))
@@ -2482,7 +2474,6 @@ save_task_gmp (gvm_connection_t *connection, credentials_t *credentials,
           config_id = "0";
           hosts_ordering = "";
           max_checks = "";
-          source_iface = "";
           max_hosts = "";
         }
     }
@@ -2502,7 +2493,6 @@ save_task_gmp (gvm_connection_t *connection, credentials_t *credentials,
   CHECK_VARIABLE_INVALID (scanner_id, "Save Task");
   CHECK_VARIABLE_INVALID (task_id, "Save Task");
   CHECK_VARIABLE_INVALID (max_checks, "Save Task");
-  CHECK_VARIABLE_INVALID (source_iface, "Save Task");
   CHECK_VARIABLE_INVALID (auto_delete, "Save Task");
   CHECK_VARIABLE_INVALID (auto_delete_data, "Save Task");
   CHECK_VARIABLE_INVALID (max_hosts, "Save Task");
@@ -2582,10 +2572,6 @@ save_task_gmp (gvm_connection_t *connection, credentials_t *credentials,
     "<value>%%s</value>"
     "</preference>"
     "<preference>"
-    "<scanner_name>source_iface</scanner_name>"
-    "<value>%%s</value>"
-    "</preference>"
-    "<preference>"
     "<scanner_name>auto_delete</scanner_name>"
     "<value>%%s</value>"
     "</preference>"
@@ -2605,7 +2591,7 @@ save_task_gmp (gvm_connection_t *connection, credentials_t *credentials,
               schedule_periods, scanner_id, max_checks, max_hosts,
               strcmp (in_assets, "0") ? "yes" : "no",
               strcmp (apply_overrides, "0") ? "yes" : "no", min_qod,
-              source_iface, auto_delete, auto_delete_data);
+              auto_delete, auto_delete_data);
   g_free (format);
 
   g_string_free (alert_element, TRUE);
@@ -6706,76 +6692,6 @@ get_config_gmp (gvm_connection_t *connection, credentials_t *credentials,
 }
 
 /**
- * @brief Save OSP file preferences.
- *
- * @param[in]   connection     Connection.
- * @param[in]   credentials    Username and password for authentication.
- * @param[in]   params         Request parameters.
- * @param[in]   next           The next command on success.
- * @param[in]   fail_next      The next command on failure.
- * @param[out]  success        Whether the last command was successful.
- * @param[out]  response_data  Extra data return for the HTTP response.
- *
- * @return Enveloped XML object.
- */
-static char *
-save_osp_prefs (gvm_connection_t *connection, credentials_t *credentials,
-                params_t *params, const char *next, const char *fail_next,
-                int *success, cmd_response_data_t *response_data)
-{
-  GHashTableIter iter;
-  gpointer param_name, val;
-  char *ret;
-  const char *config_id;
-
-  config_id = params_value (params, "config_id");
-  g_hash_table_iter_init (&iter, params);
-  ret = NULL;
-  while (g_hash_table_iter_next (&iter, &param_name, &val))
-    {
-      gchar *value;
-      param_t *param = val;
-
-      g_free (ret);
-      ret = NULL;
-
-      if (!g_str_has_prefix (param_name, "osp_pref_"))
-        continue;
-      value = param->value_size
-                ? g_base64_encode ((guchar *) param->value, param->value_size)
-                : g_strdup ("");
-
-      /* Send the name without the osp_pref_ prefix. */
-      param_name = ((char *) param_name) + 9;
-      if (gvm_connection_sendf (connection,
-                                "<modify_config config_id=\"%s\">"
-                                "<preference><name>%s</name>"
-                                "<value>%s</value></preference>"
-                                "</modify_config>",
-                                config_id, (char *) param_name, value)
-          == -1)
-        {
-          g_free (value);
-          cmd_response_data_set_status_code (response_data,
-                                             MHD_HTTP_INTERNAL_SERVER_ERROR);
-          return gsad_message (
-            credentials, "Internal error", __func__, __LINE__,
-            "An internal error occurred while saving a config. It is"
-            " unclear whether the entire config has been saved. "
-            "Diagnostics: Failure to send command to manager daemon.",
-            response_data);
-        }
-      g_free (value);
-
-      ret = check_modify_config (connection, credentials, params, next,
-                                 fail_next, success, response_data);
-      if (*success == 0)
-        return ret;
-    }
-  return ret;
-}
-
-/**
  * @brief Save details of an NVT for a config and return the next page.
  *
  * @param[in]  connection     Connection to manager.
@@ -6790,7 +6706,7 @@ save_config_gmp (gvm_connection_t *connection, credentials_t *credentials,
                  params_t *params, cmd_response_data_t *response_data)
 {
   int gmp_ret;
-  char *ret, *osp_ret;
+  char *ret;
   params_t *preferences, *selects, *trends;
   const char *config_id, *name, *comment, *scanner_id;
   int success;
@@ -6893,31 +6809,6 @@ save_config_gmp (gvm_connection_t *connection, credentials_t *credentials,
               return ret;
             }
         }
-    }
-
-  /* OSP config file preference. */
-  osp_ret = save_osp_prefs (connection, credentials, params, "get_config",
-                            "edit_config", &success, response_data);
-  if (osp_ret)
-    {
-      g_free (ret);
-      ret = osp_ret;
-    }
-
-  if (success == 0)
-    {
-      if (osp_ret == NULL)
-        {
-          cmd_response_data_set_status_code (response_data,
-                                             MHD_HTTP_INTERNAL_SERVER_ERROR);
-          return gsad_message (
-            credentials, "Internal error", __func__, __LINE__,
-            "An internal error occurred while saving a config. "
-            "It is unclear whether the entire config has been saved. "
-            "Diagnostics: save_osp_prefs returned NULL unexpectedly.",
-            response_data);
-        }
-      return ret;
     }
 
   /* Update the config. */
@@ -14229,7 +14120,7 @@ char *
 create_user_gmp (gvm_connection_t *connection, credentials_t *credentials,
                  params_t *params, cmd_response_data_t *response_data)
 {
-  const char *name, *password, *hosts, *hosts_allow, *ifaces, *ifaces_allow;
+  const char *name, *password, *hosts, *hosts_allow;
   const char *auth_method, *comment;
   int ret;
   params_t *groups, *roles;
@@ -14241,16 +14132,12 @@ create_user_gmp (gvm_connection_t *connection, credentials_t *credentials,
   password = params_value (params, "password");
   hosts = params_value (params, "access_hosts");
   hosts_allow = params_value (params, "hosts_allow");
-  ifaces = params_value (params, "access_ifaces");
-  ifaces_allow = params_value (params, "ifaces_allow");
   auth_method = params_value (params, "auth_method");
   comment = params_value (params, "comment");
 
   CHECK_VARIABLE_INVALID (name, "Create User");
   CHECK_VARIABLE_INVALID (hosts, "Create User");
   CHECK_VARIABLE_INVALID (hosts_allow, "Create User");
-  CHECK_VARIABLE_INVALID (ifaces, "Create User");
-  CHECK_VARIABLE_INVALID (ifaces_allow, "Create User");
 
   if (auth_method && strcmp (auth_method, "1") == 0)
     {
@@ -14319,9 +14206,8 @@ create_user_gmp (gvm_connection_t *connection, credentials_t *credentials,
   g_string_append (string, role_elements->str);
   g_string_free (role_elements, TRUE);
 
-  buf = g_markup_printf_escaped ("<hosts allow=\"%s\">%s</hosts>"
-                                 "<ifaces allow=\"%s\">%s</ifaces>",
-                                 hosts_allow, hosts, ifaces_allow, ifaces);
+  buf = g_markup_printf_escaped ("<hosts allow=\"%s\">%s</hosts>", hosts_allow,
+                                 hosts);
   g_string_append (string, buf);
   g_free (buf);
   if (auth_method && !strcmp (auth_method, "1"))
@@ -14487,7 +14373,7 @@ save_user_gmp (gvm_connection_t *connection, credentials_t *credentials,
   int ret;
   gchar *html, *response, *buf;
   const char *user_id, *login, *old_login, *modify_password, *password;
-  const char *hosts, *hosts_allow, *ifaces, *ifaces_allow, *comment;
+  const char *hosts, *hosts_allow, *comment;
   entity_t entity;
   GString *command, *group_elements, *role_elements;
   params_t *groups, *roles;
@@ -14498,8 +14384,6 @@ save_user_gmp (gvm_connection_t *connection, credentials_t *credentials,
   /* Whether hosts grants ("1") or forbids ("0") access.  "2" for all
    * access. */
   hosts_allow = params_value (params, "hosts_allow");
-  ifaces = params_value (params, "access_ifaces");
-  ifaces_allow = params_value (params, "ifaces_allow");
   login = params_value (params, "login");
   old_login = params_value (params, "old_login");
   modify_password = params_value (params, "modify_password");
@@ -14511,8 +14395,6 @@ save_user_gmp (gvm_connection_t *connection, credentials_t *credentials,
   CHECK_VARIABLE_INVALID (modify_password, "Save User");
   CHECK_VARIABLE_INVALID (hosts, "Save User");
   CHECK_VARIABLE_INVALID (hosts_allow, "Save User");
-  CHECK_VARIABLE_INVALID (ifaces, "Save User");
-  CHECK_VARIABLE_INVALID (ifaces_allow, "Save User");
   CHECK_VARIABLE_INVALID (login, "Save User");
   CHECK_VARIABLE_INVALID (old_login, "Save User");
 
@@ -14549,9 +14431,8 @@ save_user_gmp (gvm_connection_t *connection, credentials_t *credentials,
       g_free (buf);
     }
 
-  buf = g_markup_printf_escaped ("<hosts allow=\"%s\">%s</hosts>"
-                                 "<ifaces allow=\"%s\">%s</ifaces>",
-                                 hosts_allow, hosts, ifaces_allow, ifaces);
+  buf = g_markup_printf_escaped ("<hosts allow=\"%s\">%s</hosts>", hosts_allow,
+                                 hosts);
   g_string_append (command, buf);
   g_free (buf);
 
@@ -16521,6 +16402,123 @@ delete_tls_certificate_gmp (gvm_connection_t *connection,
 {
   return move_resource_to_trash (connection, "tls_certificate", credentials,
                                  params, response_data);
+}
+
+/**
+ * @brief Get the current license and its status, envelope the result.
+ *
+ * @param[in]  connection     Connection to manager.
+ * @param[in]  credentials  Username and password for authentication.
+ * @param[in]  params       Request parameters.
+ * @param[in]  extra_xml    Extra XML to insert inside page element.
+ * @param[out] response_data  Extra data return for the HTTP response.
+ *
+ * @return Enveloped XML object.
+ */
+static char *
+get_license (gvm_connection_t *connection, credentials_t *credentials,
+             params_t *params, const char *extra_xml,
+             cmd_response_data_t *response_data)
+{
+  return get_entity (connection, "license", credentials, params, NULL,
+                     response_data);
+}
+
+/**
+ * @brief Get the current license and its status, envelope the result.
+ *
+ * @param[in]  connection     Connection to manager.
+ * @param[in]  credentials  Username and password for authentication.
+ * @param[in]  params       Request parameters.
+ * @param[out] response_data  Extra data return for the HTTP response.
+ *
+ * @return Enveloped XML object.
+ */
+char *
+get_license_gmp (gvm_connection_t *connection, credentials_t *credentials,
+                 params_t *params, cmd_response_data_t *response_data)
+{
+  return get_license (connection, credentials, params, NULL, response_data);
+}
+
+/**
+ * @brief Modify a theia license
+ *
+ * @param[in]  connection     Connection to manager.
+ * @param[in]  credentials     Username and password for authentication.
+ * @param[in]  params          Request parameters.
+ * @param[out] response_data   Extra data return for the HTTP response.
+ *
+ * @return Enveloped XML object.
+ */
+char *
+save_license_gmp (gvm_connection_t *connection, credentials_t *credentials,
+                  params_t *params, cmd_response_data_t *response_data)
+{
+  gchar *response;
+  entity_t entity;
+  const char *file;
+  int file_size;
+  char *file_base64;
+  char *ret;
+
+  file = params_value (params, "file");
+  file_size = params_value_size (params, "file");
+
+  CHECK_VARIABLE_INVALID (file, "Save License");
+
+  file_base64 = g_base64_encode ((const guchar *) file, file_size);
+
+  response = NULL;
+  entity = NULL;
+  switch (gmpf (connection, credentials, &response, &entity, response_data,
+                "<modify_license>"
+                "<file>%s</file>"
+                "</modify_license>",
+                file_base64))
+    {
+    case 0:
+    case -1:
+      break;
+    case 1:
+      cmd_response_data_set_status_code (response_data,
+                                         MHD_HTTP_INTERNAL_SERVER_ERROR);
+      g_free (file_base64);
+      return gsad_message (
+        credentials, "Internal error", __func__, __LINE__,
+        "An internal error occurred while saving a license. "
+        "The license remains the same. "
+        "Diagnostics: Failure to send command to manager daemon.",
+        response_data);
+    case 2:
+      cmd_response_data_set_status_code (response_data,
+                                         MHD_HTTP_INTERNAL_SERVER_ERROR);
+      g_free (file_base64);
+      return gsad_message (
+        credentials, "Internal error", __func__, __LINE__,
+        "An internal error occurred while saving a license. "
+        "It is unclear whether the license has been saved or not. "
+        "Diagnostics: Failure to receive response from manager daemon.",
+        response_data);
+    default:
+      cmd_response_data_set_status_code (response_data,
+                                         MHD_HTTP_INTERNAL_SERVER_ERROR);
+      g_free (file_base64);
+      return gsad_message (
+        credentials, "Internal error", __func__, __LINE__,
+        "An internal error occurred while saving a license. "
+        "It is unclear whether the license has been saved or not. "
+        "Diagnostics: Internal Error.",
+        response_data);
+    }
+
+  ret = response_from_entity (connection, credentials, params, entity,
+                              "Save License", response_data);
+
+  g_free (file_base64);
+  free_entity (entity);
+  g_free (response);
+  return ret;
 }
 
 char *

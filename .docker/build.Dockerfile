@@ -15,10 +15,14 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     build-essential \
     cmake \
+    gcc \
     pkg-config \
     libglib2.0-dev \
     libgnutls28-dev \
     libxml2-dev \
     libssh-gcrypt-dev \
-    libmicrohttpd-dev && \
+    libmicrohttpd-dev \
+    libcgreen1-dev && \
     rm -rf /var/lib/apt/lists/*
+
+RUN ldconfig
