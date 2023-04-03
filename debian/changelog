@@ -1,3 +1,9 @@
+gsad (22.4.1-2) jammy; urgency=medium
+
+  * Import upstream version 22.4.1
+
+ -- Mohammad Razavi <mrazavi64@gmail.com>  Sat, 01 Apr 2023 13:42:49 +0330
+
 gsad (21.4.4-1) focal; urgency=medium
 
   * Initial release (imported upstream version 21.4.4)

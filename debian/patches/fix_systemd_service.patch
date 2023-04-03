@@ -1,13 +1,17 @@
 --- a/config/gsad.service.in
 +++ b/config/gsad.service.in
-@@ -9,9 +9,23 @@
+@@ -7,12 +7,26 @@
+ [Service]
+ Type=exec
  User=gvm
- Group=gvm
- PIDFile=${GSAD_PID_DIR}/gsad.pid
--ExecStart=${SBINDIR}/gsad --listen 127.0.0.1 --port 9392 --http-only
-+ExecStart=${SBINDIR}/gsad --listen $GSAD_ADDRESS --port $GSAD_PORT $GSAD_OPTIONS
++Group=gvm
+ PIDFile=${GSAD_PID_PATH}
+-RuntimeDirectory=gsad
 +RuntimeDirectory=gvm
+ RuntimeDirectoryMode=2775
+-ExecStart=${SBINDIR}/gsad --foreground --listen 127.0.0.1 --port 9392 --http-only
 +EnvironmentFile=${DEFAULT_CONFIG_DIR}/gsad
++ExecStart=${SBINDIR}/gsad --listen $GSAD_ADDRESS --port $GSAD_PORT $GSAD_OPTIONS
  Restart=always
  TimeoutStopSec=10
 +# gsad service requires serverkey.pem created by gvmd
